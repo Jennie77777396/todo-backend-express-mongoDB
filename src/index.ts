@@ -18,14 +18,15 @@ mongoose.connect(MONGODB_URI)
   });
 
 app.use(cors({
-  origin: process.env.REACT_APP_API_BASE_URL,
+  origin: 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 app.use(express.json());
 app.use('/auth', authRoutes); 
-app.use('/', taskRoutes);     
+app.use('/api', taskRoutes);     
 
 // Custom Error Handling Middleware
 interface AppError extends Error {

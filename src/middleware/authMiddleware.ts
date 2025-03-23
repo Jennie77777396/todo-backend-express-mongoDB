@@ -13,7 +13,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   if (!token) {
     const error = new Error('Unauthorized: No token provided') as Error & { status?: number };
     error.status = 401;
-    throw error;
+    return next(error);
   }
 
   try {
@@ -23,7 +23,7 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
   } catch (err) {
     const error = new Error('Unauthorized: Invalid token') as Error & { status?: number };
     error.status = 401;
-    throw error;
+    return next(error);
   }
 };
 
