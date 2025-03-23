@@ -7,7 +7,7 @@ This is the backend of a Todo application built with Node.js, Express, TypeScrip
 - **Node.js**: Version 16.x or higher
 - **pnpm**: Version 8.x or higher (install globally with `npm install -g pnpm`)
 - **MongoDB**: Use the provided MongoDB database (details below) or set up your own instance (local or cloud, e.g., MongoDB Atlas).
-- **Frontend Client**: The [Todo App Frontend](https://github.com/Jennie77777396/todo-frontend-react) connects to this backend (see frontend README for setup).
+- **Frontend Client**: The [Todo App Frontend](https://github.com/Jennie77777396/todo-vite) connects to this backend (see frontend README for setup).
 
 ## Installation
 
