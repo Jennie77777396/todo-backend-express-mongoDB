@@ -1,18 +1,23 @@
 import express, { Request, Response, RequestHandler, NextFunction } from 'express';
 import Task from '../taskModel';
+import { requireAuth } from '../middleware/authMiddleware';
 
 const router = express.Router();
 
-// Removed requireAuth middleware for now
+// Protect all routes with authentication
+router.use(requireAuth);
+
+// Get all tasks for the authenticated user
 router.get('/tasks', (async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({ userId: req.user!.id });
     res.status(200).json(tasks);
   } catch (err) {
     next(err);
   }
 }) as RequestHandler);
 
+// Add a new task
 router.post('/tasks', (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { task } = req.body as { task?: string };
@@ -22,7 +27,7 @@ router.post('/tasks', (async (req: Request, res: Response, next: NextFunction) =
       throw error;
     }
 
-    const newTask = new Task({ task });
+    const newTask = new Task({ task, userId: req.user!.id });
     await newTask.save();
     res.status(201).json(newTask);
   } catch (err) {
@@ -35,6 +40,7 @@ interface UpdateTask {
   completed?: boolean;
 }
 
+// Update a task
 router.put('/tasks/:id', (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -46,9 +52,13 @@ router.put('/tasks/:id', (async (req: Request, res: Response, next: NextFunction
       throw error;
     }
 
-    const task = await Task.findByIdAndUpdate(id, updatedTask, { new: true });
+    const task = await Task.findOneAndUpdate(
+      { _id: id, userId: req.user!.id },
+      updatedTask,
+      { new: true }
+    );
     if (!task) {
-      const error = new Error('Not Found: Task does not exist') as Error & { status?: number };
+      const error = new Error('Not Found: Task does not exist or you lack permission') as Error & { status?: number };
       error.status = 404;
       throw error;
     }
@@ -59,12 +69,13 @@ router.put('/tasks/:id', (async (req: Request, res: Response, next: NextFunction
   }
 }) as RequestHandler);
 
+// Delete a task
 router.delete('/tasks/:id', (async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const task = await Task.findByIdAndDelete(id);
+    const task = await Task.findOneAndDelete({ _id: id, userId: req.user!.id });
     if (!task) {
-      const error = new Error('Not Found: Task does not exist') as Error & { status?: number };
+      const error = new Error('Not Found: Task does not exist or you lack permission') as Error & { status?: number };
       error.status = 404;
       throw error;
     }

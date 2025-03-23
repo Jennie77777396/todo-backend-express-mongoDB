@@ -3,27 +3,29 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import taskRoutes from './routes/taskRoutes';
+import authRoutes from './routes/authRoutes';
 
 dotenv.config();
 
 const app = express();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/todo-app';
+const MONGODB_URI = process.env.MONGODB_URI;
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => {
     console.error('MongoDB connection error:', err);
-    process.exit(1); 
+    process.exit(1);
   });
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.REACT_APP_API_BASE_URL,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
 app.use(express.json());
-app.use('/', taskRoutes);
+app.use('/auth', authRoutes); 
+app.use('/', taskRoutes);     
 
 // Custom Error Handling Middleware
 interface AppError extends Error {
