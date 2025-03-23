@@ -3,12 +3,11 @@ import jwt from 'jsonwebtoken';
 import User from '../models/userModel';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || '123456'; 
 
-// Register a new user
 router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
+    console.log('Register attempt:', { email, password });
     if (!email || !password) {
       const error = new Error('Email and password are required') as Error & { status?: number };
       error.status = 400;
@@ -24,15 +23,15 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
 
     const user = new User({ email, password });
     await user.save();
+    console.log('User saved:', user);
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
     res.status(201).json({ token });
   } catch (err) {
     next(err);
   }
 });
 
-// Login a user
 router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -43,13 +42,21 @@ router.post('/login', async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const user = await User.findOne({ email });
-    if (!user || !(await user.comparePassword(password))) {
-      const error = new Error('Invalid credentials') as Error & { status?: number };
+    console.log('User found:', user); // Debug user retrieval
+    if (!user) {
+      const error = new Error('Invalid credentials - User not found') as Error & { status?: number };
       error.status = 401;
       throw error;
     }
 
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, { expiresIn: '1h' });
+    const passwordMatch = await user.comparePassword(password);
+    if (!passwordMatch) {
+      const error = new Error('Invalid credentials - Password incorrect') as Error & { status?: number };
+      error.status = 401;
+      throw error;
+    }
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET!, { expiresIn: '1h' });
     res.status(200).json({ token });
   } catch (err) {
     next(err);

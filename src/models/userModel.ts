@@ -12,19 +12,15 @@ const userSchema = new Schema<User>({
   password: { type: String, required: true },
 });
 
-// Hash password before saving
 userSchema.pre('save', async function (next) {
-  const user = this as User;
-  if (!user.isModified('password')) return next();
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
-  user.password = await bcrypt.hash(user.password, salt);
+  this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Method to compare passwords
-userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
-  const user = this as User;
-  return bcrypt.compare(candidatePassword, user.password);
+userSchema.methods.comparePassword = async function (candidatePassword: string) {
+  return bcrypt.compare(candidatePassword, this.password);
 };
 
 export default mongoose.model<User>('User', userSchema);
